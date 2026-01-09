@@ -101,13 +101,13 @@ export default function CrisisSearchPage() {
               address: location.displayName,
               city: location.name.split(',')[0],
               state: location.name.split(',')[1]?.trim(),
-              postalCode: null,
+              postalCode: undefined,
               coordinates: {
                 lat: location.coordinates.lat,
                 lon: location.coordinates.lng,
               },
             }
-          : null,
+          : undefined,
         // Default: show only "Open now" resources for crisis workers
         urgentAccessOnly: extraction.filters.urgentAccessOnly ?? true,
       };

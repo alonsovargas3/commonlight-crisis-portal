@@ -125,7 +125,7 @@ export function CrisisFilters({ filters, onChange }: CrisisFiltersProps) {
           value={filters.insurance?.[0] || 'all'}
           onValueChange={(value) => {
             if (value === 'all') {
-              updateFilter('insurance', null);
+              updateFilter('insurance', undefined);
             } else {
               updateFilter('insurance', [value as any]);
             }
@@ -162,13 +162,13 @@ export function CrisisFilters({ filters, onChange }: CrisisFiltersProps) {
           }
           onValueChange={(value) => {
             if (value === 'all') {
-              updateFilter('walk_ins_accepted', null);
-              updateFilter('referral_required', null);
+              updateFilter('walk_ins_accepted', undefined);
+              updateFilter('referral_required', undefined);
             } else if (value === 'walk-in') {
               updateFilter('walk_ins_accepted', true);
-              updateFilter('referral_required', null);
+              updateFilter('referral_required', undefined);
             } else if (value === 'referral') {
-              updateFilter('walk_ins_accepted', null);
+              updateFilter('walk_ins_accepted', undefined);
               updateFilter('referral_required', true);
             }
           }}
@@ -247,9 +247,9 @@ export function CrisisFilters({ filters, onChange }: CrisisFiltersProps) {
                   onChange({
                     urgentAccessOnly: true,
                     max_distance_km: 50,
-                    insurance: null,
-                    walk_ins_accepted: null,
-                    referral_required: null,
+                    insurance: undefined,
+                    walk_ins_accepted: undefined,
+                    referral_required: undefined,
                   });
                 }}
                 variant="outline"
