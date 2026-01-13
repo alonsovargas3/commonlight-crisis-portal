@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Search, MapPin, Loader2, Filter as FilterIcon, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,7 @@ import { FilterUtils } from "@/types/search";
  * - Minimal filters (max 4)
  * - Clean, focused results display
  */
-export default function CrisisSearchPage() {
+function SearchPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const location = useLocation();
@@ -317,5 +317,17 @@ export default function CrisisSearchPage() {
           )}
       </div>
     </div>
+  );
+}
+
+export default function CrisisSearchPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      </div>
+    }>
+      <SearchPageContent />
+    </Suspense>
   );
 }
