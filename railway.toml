@@ -5,9 +5,7 @@
 
 [build]
 builder = "nixpacks"
-
-[build.nixpacksVersion]
-version = "1.41.0"
+nixpacksVersion = "1.41.0"
 
 [build.nixpacksPlan]
 providers = ["nodejs"]
