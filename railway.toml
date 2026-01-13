@@ -6,6 +6,15 @@
 [build]
 builder = "nixpacks"
 
+[build.nixpacksVersion]
+version = "1.41.0"
+
+[build.nixpacksPlan]
+providers = ["nodejs"]
+
+[build.nixpacksPlan.phases.setup]
+nixPkgs = ["nodejs_20"]
+
 [deploy]
 startCommand = "npm start"
 healthcheckPath = "/"
