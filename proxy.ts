@@ -5,6 +5,7 @@ const isPublicRoute = createRouteMatcher([
   '/sign-in(.*)',
   '/sign-up(.*)',
   '/api/webhooks(.*)', // If you add Clerk webhooks
+  '/api/health', // Health check endpoint for Railway
 ]);
 
 export default clerkMiddleware(async (auth, request) => {
