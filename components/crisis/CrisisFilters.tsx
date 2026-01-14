@@ -132,13 +132,13 @@ export function CrisisFilters({ filters, onChange }: CrisisFiltersProps) {
           </Label>
           <Switch
             id="open-now"
-            checked={filters.urgentAccessOnly ?? true}
-            onCheckedChange={(checked) => updateFilter('urgentAccessOnly', checked)}
+            checked={filters.urgentAccessOnly ?? false}
+            onCheckedChange={(checked) => updateFilter('urgentAccessOnly', checked || undefined)}
             className="data-[state=checked]:bg-blue-700"
           />
         </div>
         <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
-          Show only resources available right now
+          Show only resources with immediate/same-day access
         </p>
       </div>
 

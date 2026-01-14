@@ -108,8 +108,8 @@ function SearchPageContent() {
               },
             }
           : undefined,
-        // Default: show only "Open now" resources for crisis workers
-        urgentAccessOnly: extraction.filters.urgentAccessOnly ?? true,
+        // Don't force urgentAccessOnly - let LLM extraction or user control it
+        // urgentAccessOnly: extraction.filters.urgentAccessOnly ?? true,
       };
 
       setFilters(searchFilters);
