@@ -29,18 +29,60 @@ const VALID_SERVICE_TYPES = new Set([
 ]);
 
 /**
- * Validate and clean extracted filters by removing invalid service types
+ * Mapping for common LLM mistakes to correct canonical codes
  */
-function validateExtractedFilters(response: LLMFilterExtractionResponse): LLMFilterExtractionResponse {
+const SERVICE_TYPE_ALIASES: Record<string, string> = {
+  'crisis_hotline': 'crisis_line',
+  'hotline': 'crisis_line',
+  'emergency_services': 'crisis_line',
+  'emergency': 'crisis_line',
+  '988': 'crisis_line',
+  'suicide_hotline': 'suicide_prevention',
+  'mental_health': 'outpatient_therapy',
+  'therapy': 'outpatient_therapy',
+  'counseling': 'outpatient_therapy',
+  'inpatient': 'inpatient_psychiatric',
+  'residential': 'residential_short_term',
+  'rehab': 'sud_inpatient',
+  'detoxification': 'detox',
+};
+
+/**
+ * Validate and clean extracted filters by mapping and removing invalid service types
+ */
+function validateExtractedFilters(response: LLMFilterExtractionResponse, originalQuery: string): LLMFilterExtractionResponse {
   if (response.filters?.service_types) {
-    const validTypes = response.filters.service_types.filter(type => VALID_SERVICE_TYPES.has(type));
-    const invalidTypes = response.filters.service_types.filter(type => !VALID_SERVICE_TYPES.has(type));
+    const mappedTypes: string[] = [];
+    const invalidTypes: string[] = [];
+
+    response.filters.service_types.forEach(type => {
+      // Check if valid
+      if (VALID_SERVICE_TYPES.has(type)) {
+        mappedTypes.push(type);
+      }
+      // Check if has alias mapping
+      else if (SERVICE_TYPE_ALIASES[type]) {
+        const mapped = SERVICE_TYPE_ALIASES[type];
+        console.log(`[LLM Extract] Mapped "${type}" → "${mapped}"`);
+        mappedTypes.push(mapped);
+      }
+      // Invalid and no mapping
+      else {
+        invalidTypes.push(type);
+      }
+    });
 
     if (invalidTypes.length > 0) {
-      console.warn('[LLM Extract] Removed invalid service types:', invalidTypes);
+      console.warn('[LLM Extract] Removed invalid service types (no mapping):', invalidTypes);
     }
 
-    response.filters.service_types = validTypes;
+    response.filters.service_types = [...new Set(mappedTypes)]; // Remove duplicates
+
+    // If no service types remain after filtering, preserve original query as keywords
+    if (response.filters.service_types.length === 0 && originalQuery) {
+      console.log('[LLM Extract] No valid service types extracted, preserving original query as keywords');
+      response.filters.keywords = originalQuery;
+    }
   }
 
   return response;
@@ -84,7 +126,7 @@ export async function POST(request: NextRequest) {
       console.log('[LLM Extract] Backend success');
 
       // Validate and clean extracted filters
-      const validatedResponse = validateExtractedFilters(backendResponse);
+      const validatedResponse = validateExtractedFilters(backendResponse, query);
       return NextResponse.json(validatedResponse);
 
     } catch (backendError) {
@@ -97,7 +139,7 @@ export async function POST(request: NextRequest) {
         console.log('[LLM Extract] Fallback success with', fallbackResponse.metadata.provider);
 
         // Validate and clean extracted filters
-        const validatedResponse = validateExtractedFilters(fallbackResponse);
+        const validatedResponse = validateExtractedFilters(fallbackResponse, query);
         return NextResponse.json(validatedResponse);
 
       } catch (fallbackError) {
@@ -109,7 +151,7 @@ export async function POST(request: NextRequest) {
         console.log('[LLM Extract] Using basic fallback');
 
         // Validate and clean extracted filters
-        const validatedResponse = validateExtractedFilters(basicFilters);
+        const validatedResponse = validateExtractedFilters(basicFilters, query);
         return NextResponse.json(validatedResponse);
       }
     }
