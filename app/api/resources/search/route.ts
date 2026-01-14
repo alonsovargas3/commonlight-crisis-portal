@@ -20,13 +20,28 @@ export async function GET(request: NextRequest) {
     const keywords = searchParams.get('keywords') || '';
     const locationAddress = searchParams.get('location.address') || '';
 
+    // Parse new bead filters [bp95, q7cl, q58w, o09d]
+    const care_phase = searchParams.get('care_phase') as 'immediate_crisis' | 'acute_support' | 'recovery_support' | 'maintenance' | null;
+    const gender_specific = searchParams.get('gender_specific') as 'male' | 'female' | null;
+    const has_crisis_services = searchParams.get('has_crisis_services') === 'true';
+    const urgentAccessOnly = searchParams.get('urgentAccessOnly') === 'true';
+    const walk_ins_accepted = searchParams.get('walk_ins_accepted') === 'true';
+    const referral_required = searchParams.get('referral_required') === 'true';
+
     console.log('Search Request:', {
       keywords,
       location: locationAddress,
+      care_phase,
+      gender_specific,
+      has_crisis_services,
+      urgentAccessOnly,
+      walk_ins_accepted,
+      referral_required,
       allParams: Object.fromEntries(searchParams),
     });
 
     // Mock search results - in production, this would query your database
+    // Apply filters to determine which results to return and their tier [bead 0fxp]
     const mockResults: SearchResponse = {
       items: [
         {
@@ -60,6 +75,22 @@ export async function GET(request: NextRequest) {
               last_verified_at: new Date().toISOString(),
               explanation: 'Walk-ins accepted, no appointment needed',
             },
+            ...(care_phase === 'immediate_crisis' ? [{
+              category: 'service' as const,
+              field: 'care_phase',
+              matched_value: 'immediate_crisis',
+              confidence: 'verified' as const,
+              last_verified_at: new Date().toISOString(),
+              explanation: 'Specializes in immediate crisis intervention',
+            }] : []),
+            ...(walk_ins_accepted ? [{
+              category: 'availability' as const,
+              field: 'walk_ins_accepted',
+              matched_value: true,
+              confidence: 'verified' as const,
+              last_verified_at: new Date().toISOString(),
+              explanation: 'No appointment needed - walk-ins welcome',
+            }] : []),
           ],
           unknowns: [],
           provenance: {
@@ -85,11 +116,13 @@ export async function GET(request: NextRequest) {
           ],
           distance_km: 2.5,
           accessibility_score: 85,
+          // Tier based on care_phase match [bead 0fxp]
+          tier: care_phase === 'immediate_crisis' ? 'primary' : 'secondary',
         },
         {
           id: 'resource-2',
           name: 'Aurora Mental Health Center',
-          description: 'Comprehensive mental health services including crisis support, therapy, and psychiatric care.',
+          description: 'Comprehensive mental health services including crisis support, therapy, and psychiatric care. Gender-specific programs available. Accepts referrals from primary care physicians.',
           type: 'facility',
           city: 'Aurora',
           state: 'CO',
@@ -107,6 +140,22 @@ export async function GET(request: NextRequest) {
               last_verified_at: new Date().toISOString(),
               explanation: 'Offers comprehensive mental health services',
             },
+            ...(gender_specific ? [{
+              category: 'population' as const,
+              field: 'gender_specific',
+              matched_value: gender_specific,
+              confidence: 'verified' as const,
+              last_verified_at: new Date().toISOString(),
+              explanation: `Offers ${gender_specific}-specific programs`,
+            }] : []),
+            ...(referral_required ? [{
+              category: 'availability' as const,
+              field: 'referral_required',
+              matched_value: true,
+              confidence: 'verified' as const,
+              last_verified_at: new Date().toISOString(),
+              explanation: 'Accepts referrals from primary care physicians',
+            }] : []),
           ],
           unknowns: ['wait_time'],
           provenance: {
@@ -125,6 +174,8 @@ export async function GET(request: NextRequest) {
           ],
           distance_km: 8.2,
           accessibility_score: 75,
+          // Tier based on filter matching [bead 0fxp]
+          tier: (care_phase === 'recovery_support' || care_phase === 'maintenance') ? 'primary' : 'secondary',
         },
         {
           id: 'resource-3',
@@ -153,6 +204,14 @@ export async function GET(request: NextRequest) {
               confidence: 'verified',
               explanation: 'Free services, no insurance required',
             },
+            ...(has_crisis_services ? [{
+              category: 'service' as const,
+              field: 'has_crisis_services',
+              matched_value: true,
+              confidence: 'verified' as const,
+              last_verified_at: new Date().toISOString(),
+              explanation: 'Dedicated crisis intervention services available',
+            }] : []),
           ],
           unknowns: [],
           provenance: {
@@ -178,6 +237,8 @@ export async function GET(request: NextRequest) {
           ],
           distance_km: 1.8,
           accessibility_score: 90,
+          // Tier based on crisis services filter [bead 0fxp]
+          tier: has_crisis_services || care_phase === 'immediate_crisis' ? 'primary' : 'secondary',
         },
       ],
       total: 3,
@@ -186,6 +247,12 @@ export async function GET(request: NextRequest) {
         location: locationAddress ? {
           address: locationAddress,
         } : undefined,
+        care_phase: care_phase || undefined,
+        gender_specific: gender_specific || undefined,
+        has_crisis_services: has_crisis_services || undefined,
+        urgentAccessOnly: urgentAccessOnly || undefined,
+        walk_ins_accepted: walk_ins_accepted || undefined,
+        referral_required: referral_required || undefined,
       },
       metadata: {
         execution_time_ms: 125,

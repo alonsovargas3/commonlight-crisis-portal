@@ -36,6 +36,7 @@ interface Resource {
     rcs?: number;
   };
   avg_rcs?: number;
+  tier?: 'primary' | 'secondary' | 'suppressed'; // [bead 0fxp]
 }
 
 interface CrisisResourceCardProps {
@@ -76,6 +77,23 @@ export function CrisisResourceCard({ resource, userLocation, index }: CrisisReso
 
   const trustLevel = getTrustLevel(rcs);
   const TrustIcon = trustLevel.icon;
+
+  // Tier styling [bead 0fxp]
+  const getTierBadge = (tier?: 'primary' | 'secondary' | 'suppressed') => {
+    if (!tier) return null;
+    switch (tier) {
+      case 'primary':
+        return { label: 'Best Match', variant: 'default' as const, className: 'bg-blue-600 hover:bg-blue-700 text-white' };
+      case 'secondary':
+        return { label: 'Good Match', variant: 'secondary' as const, className: 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200' };
+      case 'suppressed':
+        return null; // Don't show suppressed tier badge
+      default:
+        return null;
+    }
+  };
+
+  const tierBadge = getTierBadge(resource.tier);
 
   // Format distance
   const distanceText = resource.distance_km !== undefined
@@ -119,18 +137,26 @@ export function CrisisResourceCard({ resource, userLocation, index }: CrisisReso
   return (
     <Card className="p-5 hover:shadow-lg hover:border-blue-200 dark:hover:border-blue-800 transition-all duration-200 bg-white dark:bg-gray-900">
       <div className="space-y-4">
-        {/* Header: Name + Trust Indicator */}
+        {/* Header: Name + Badges */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
-            <Link
-              href={`/crisis/resource/${resource.id}`}
-              className="group flex items-center gap-2 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-            >
-              <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 truncate transition-colors">
-                {displayName}
-              </h3>
-              <ChevronRight className="h-5 w-5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
-            </Link>
+            <div className="flex items-center gap-2 flex-wrap mb-1">
+              <Link
+                href={`/crisis/resource/${resource.id}`}
+                className="group flex items-center gap-2 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+              >
+                <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                  {displayName}
+                </h3>
+                <ChevronRight className="h-5 w-5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </Link>
+              {/* Tier Badge [bead 0fxp] */}
+              {tierBadge && (
+                <Badge variant={tierBadge.variant} className={`${tierBadge.className} text-xs font-semibold px-2 py-0.5`}>
+                  {tierBadge.label}
+                </Badge>
+              )}
+            </div>
             {resource.services && resource.services.length > 0 && (
               <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                 {resource.services[0].name}

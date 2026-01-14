@@ -32,11 +32,13 @@ interface CrisisFiltersProps {
 /**
  * Crisis Filters Component
  *
- * Implements minimal filters (max 4) as per PRD:
- * 1. Open now
- * 2. Distance / travel time
- * 3. Eligibility (insurance)
- * 4. Access method (walk-in, referral, etc.)
+ * Implements progressive disclosure filters:
+ * - Care phase (immediate crisis, acute, recovery, maintenance) [bead bp95]
+ * - Crisis services toggle [bead q58w]
+ * - Open now / urgent access
+ * - Distance / travel time
+ * - Eligibility (insurance, gender-specific) [bead q7cl]
+ * - Access method (walk-in, referral, etc.) [bead o09d]
  *
  * Mobile optimizations:
  * - Collapsible drawer on mobile
@@ -59,14 +61,70 @@ export function CrisisFilters({ filters, onChange }: CrisisFiltersProps) {
 
   // Count active filters
   const activeFilterCount = [
+    filters.care_phase,
+    filters.has_crisis_services,
     filters.urgentAccessOnly,
     filters.insurance && filters.insurance.length > 0,
+    filters.gender_specific,
     filters.walk_ins_accepted || filters.referral_required,
   ].filter(Boolean).length;
 
   const FilterContent = () => (
     <div className="space-y-6">
-      {/* Filter 1: Open Now */}
+      {/* Filter: Care Phase [bead bp95] */}
+      <div className="space-y-3">
+        <Label htmlFor="care-phase" className="text-sm font-semibold text-gray-900 dark:text-white block">
+          Care Phase
+        </Label>
+        <Select
+          value={filters.care_phase || 'all'}
+          onValueChange={(value) => {
+            if (value === 'all') {
+              updateFilter('care_phase', undefined);
+            } else {
+              updateFilter('care_phase', value as any);
+            }
+          }}
+        >
+          <SelectTrigger id="care-phase" className="min-h-[44px]">
+            <SelectValue placeholder="All care phases" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All care phases</SelectItem>
+            <SelectItem value="immediate_crisis">Immediate Crisis (0-24 hrs)</SelectItem>
+            <SelectItem value="acute_support">Acute Support (1-7 days)</SelectItem>
+            <SelectItem value="recovery_support">Recovery Support (1-12 weeks)</SelectItem>
+            <SelectItem value="maintenance">Ongoing Maintenance</SelectItem>
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-gray-600 dark:text-gray-400">
+          Filter by urgency and timeline of care needed
+        </p>
+      </div>
+
+      <div className="h-px bg-gray-200 dark:bg-gray-700" />
+
+      {/* Filter: Crisis Services [bead q58w] */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between min-h-[44px]">
+          <Label htmlFor="crisis-services" className="text-sm font-semibold text-gray-900 dark:text-white">
+            Crisis Services Only
+          </Label>
+          <Switch
+            id="crisis-services"
+            checked={filters.has_crisis_services ?? false}
+            onCheckedChange={(checked) => updateFilter('has_crisis_services', checked || undefined)}
+            className="data-[state=checked]:bg-blue-700"
+          />
+        </div>
+        <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
+          Show only facilities with crisis intervention services
+        </p>
+      </div>
+
+      <div className="h-px bg-gray-200 dark:bg-gray-700" />
+
+      {/* Filter: Open Now */}
       <div className="space-y-3">
         <div className="flex items-center justify-between min-h-[44px]">
           <Label htmlFor="open-now" className="text-sm font-semibold text-gray-900 dark:text-white">
@@ -116,7 +174,7 @@ export function CrisisFilters({ filters, onChange }: CrisisFiltersProps) {
 
       <div className="h-px bg-gray-200 dark:bg-gray-700" />
 
-      {/* Filter 3: Eligibility (Insurance) */}
+      {/* Filter: Eligibility (Insurance) */}
       <div className="space-y-3">
         <Label htmlFor="insurance" className="text-sm font-semibold text-gray-900 dark:text-white block">
           Insurance Accepted
@@ -147,7 +205,38 @@ export function CrisisFilters({ filters, onChange }: CrisisFiltersProps) {
 
       <div className="h-px bg-gray-200 dark:bg-gray-700" />
 
-      {/* Filter 4: Access Method */}
+      {/* Filter: Gender-Specific Services [bead q7cl] */}
+      <div className="space-y-3">
+        <Label htmlFor="gender-specific" className="text-sm font-semibold text-gray-900 dark:text-white block">
+          Gender-Specific Services
+        </Label>
+        <Select
+          value={filters.gender_specific || 'all'}
+          onValueChange={(value) => {
+            if (value === 'all') {
+              updateFilter('gender_specific', undefined);
+            } else {
+              updateFilter('gender_specific', value as any);
+            }
+          }}
+        >
+          <SelectTrigger id="gender-specific" className="min-h-[44px]">
+            <SelectValue placeholder="All genders" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All genders welcome</SelectItem>
+            <SelectItem value="male">Male-only services</SelectItem>
+            <SelectItem value="female">Female-only services</SelectItem>
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-gray-600 dark:text-gray-400">
+          Filter by gender-specific programs
+        </p>
+      </div>
+
+      <div className="h-px bg-gray-200 dark:bg-gray-700" />
+
+      {/* Filter: Access Method [bead o09d] */}
       <div className="space-y-3">
         <Label htmlFor="access" className="text-sm font-semibold text-gray-900 dark:text-white block">
           Access Method
@@ -245,9 +334,12 @@ export function CrisisFilters({ filters, onChange }: CrisisFiltersProps) {
                 onClick={() => {
                   // Reset all filters
                   onChange({
+                    care_phase: undefined,
+                    has_crisis_services: undefined,
                     urgentAccessOnly: true,
                     max_distance_km: 50,
                     insurance: undefined,
+                    gender_specific: undefined,
                     walk_ins_accepted: undefined,
                     referral_required: undefined,
                   });
