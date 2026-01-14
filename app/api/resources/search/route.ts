@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
     // Parse filters from URL params using existing utility
     const filters: CanonicalSearchFilters = FilterUtils.fromURLParams(searchParams);
 
-    console.log('[Resource Search] Parsed filters:', filters);
+    console.log('[Resource Search] Parsed filters:', JSON.stringify(filters, null, 2));
 
     // Validate required fields - location OR keywords must be provided
     if (!filters.location && !filters.keywords) {
@@ -33,9 +33,21 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform to backend format
-    const backendParams = transformFiltersToBackendParams(filters);
-
-    console.log('[Resource Search] Backend params:', backendParams);
+    let backendParams;
+    try {
+      backendParams = transformFiltersToBackendParams(filters);
+      console.log('[Resource Search] Backend params:', backendParams);
+    } catch (transformError) {
+      console.error('[Resource Search] Transform error:', transformError);
+      return NextResponse.json(
+        {
+          error: 'Failed to transform filters',
+          details: transformError instanceof Error ? transformError.message : String(transformError),
+          filters: filters
+        },
+        { status: 500 }
+      );
+    }
 
     // Call backend API
     try {

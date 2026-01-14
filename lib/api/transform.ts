@@ -23,7 +23,15 @@ export function transformFiltersToBackendParams(
 
   // Location: SearchLocation → "lat,lon"
   if (filters.location?.coordinates) {
-    params.location = `${filters.location.coordinates.lat},${filters.location.coordinates.lon}`;
+    const lat = filters.location.coordinates.lat;
+    const lon = filters.location.coordinates.lon;
+
+    if (typeof lat === 'number' && typeof lon === 'number') {
+      params.location = `${lat},${lon}`;
+    } else {
+      console.error('[Transform] Invalid coordinates:', { lat, lon, type_lat: typeof lat, type_lon: typeof lon });
+      throw new Error(`Invalid location coordinates: lat=${lat} (${typeof lat}), lon=${lon} (${typeof lon})`);
+    }
   }
 
   // Distance: max_distance_km → radius_km
