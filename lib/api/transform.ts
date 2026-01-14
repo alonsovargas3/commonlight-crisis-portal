@@ -9,6 +9,22 @@
 import type { CanonicalSearchFilters, SearchResponse, ResourceSearchResult, LocationCoordinate } from '@/types/search';
 
 /**
+ * Age group aliases for common LLM mistakes
+ */
+const AGE_GROUP_ALIASES: Record<string, string> = {
+  'teen': 'adolescent',
+  'teens': 'adolescent',
+  'teenager': 'adolescent',
+  'teenagers': 'adolescent',
+  'youth': 'adolescent',
+  'kids': 'child',
+  'children': 'child',
+  'elderly': 'older_adult',
+  'senior': 'older_adult',
+  'seniors': 'older_adult',
+};
+
+/**
  * Transform frontend CanonicalSearchFilters to backend query params
  */
 export function transformFiltersToBackendParams(
@@ -39,24 +55,37 @@ export function transformFiltersToBackendParams(
     params.radius_km = filters.max_distance_km.toString();
   }
 
-  // Service types (comma-separated)
-  if (filters.service_types?.length) {
-    params.service_types = filters.service_types.join(',');
+  // Service types (comma-separated) - handle both string and array
+  if (filters.service_types) {
+    params.service_types = Array.isArray(filters.service_types)
+      ? filters.service_types.join(',')
+      : filters.service_types;
   }
 
-  // Insurance: insurance → insurance_types
-  if (filters.insurance?.length) {
-    params.insurance_types = filters.insurance.join(',');
+  // Insurance: insurance → insurance_types - handle both string and array
+  if (filters.insurance) {
+    params.insurance_types = Array.isArray(filters.insurance)
+      ? filters.insurance.join(',')
+      : filters.insurance;
   }
 
-  // Languages (comma-separated)
-  if (filters.languages?.length) {
-    params.languages = filters.languages.join(',');
+  // Languages (comma-separated) - handle both string and array
+  if (filters.languages) {
+    params.languages = Array.isArray(filters.languages)
+      ? filters.languages.join(',')
+      : filters.languages;
   }
 
-  // Age groups (comma-separated)
-  if (filters.age_groups?.length) {
-    params.age_groups = filters.age_groups.join(',');
+  // Age groups (comma-separated) - handle both string and array, map aliases
+  if (filters.age_groups) {
+    const ageGroupsArray = Array.isArray(filters.age_groups)
+      ? filters.age_groups
+      : [filters.age_groups];
+
+    // Map aliases to canonical codes
+    const mappedAgeGroups = ageGroupsArray.map(ag => AGE_GROUP_ALIASES[ag] || ag);
+
+    params.age_groups = mappedAgeGroups.join(',');
   }
 
   // Boolean filters
