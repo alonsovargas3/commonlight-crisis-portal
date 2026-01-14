@@ -37,6 +37,23 @@ export async function GET(request: NextRequest) {
     try {
       backendParams = transformFiltersToBackendParams(filters);
       console.log('[Resource Search] Backend params:', backendParams);
+
+      // CRITICAL: Backend requires at least 'query' OR 'service_types'
+      // If neither exists, add a default based on care_phase or use generic crisis search
+      if (!backendParams.query && !backendParams.service_types) {
+        console.warn('[Resource Search] No query or service_types - adding default');
+
+        // If care_phase is immediate_crisis, default to crisis services
+        if (backendParams.care_phase === 'immediate_crisis') {
+          backendParams.service_types = 'crisis_line,crisis_text,crisis_chat,crisis_mobile,crisis_walk_in,suicide_prevention';
+          console.log('[Resource Search] Added default crisis service types for immediate_crisis');
+        } else {
+          // Otherwise, add generic query
+          backendParams.query = 'mental health support';
+          console.log('[Resource Search] Added default query');
+        }
+      }
+
     } catch (transformError) {
       console.error('[Resource Search] Transform error:', transformError);
       return NextResponse.json(
