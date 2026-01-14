@@ -4,6 +4,49 @@ import { BackendClient, BackendAPIError } from '@/lib/api/backend-client';
 import { extractFiltersWithFallback } from '@/lib/api/llm-fallback';
 
 /**
+ * Valid canonical service type codes from backend
+ * Source: backend/vocabularies/canonical_codes.py
+ */
+const VALID_SERVICE_TYPES = new Set([
+  // Crisis services
+  'crisis_line', 'crisis_text', 'crisis_chat', 'crisis_mobile',
+  'crisis_walk_in', 'crisis_stabilization', 'suicide_prevention',
+  // Inpatient
+  'inpatient_psychiatric', 'inpatient_dual_diagnosis',
+  'residential_long_term', 'residential_short_term', 'partial_hospitalization',
+  // Outpatient
+  'outpatient_therapy', 'intensive_outpatient', 'medication_management',
+  'telehealth_therapy', 'case_management', 'peer_support',
+  // Substance use
+  'detox', 'detox_social', 'sud_inpatient', 'sud_outpatient',
+  'mat', 'recovery_support', 'harm_reduction',
+  // Support groups
+  'support_group_general', 'support_group_aa', 'support_group_na',
+  'support_group_smart', 'support_group_family', 'support_group_grief',
+  // SDOH
+  'housing', 'food', 'transportation', 'legal', 'employment',
+  'healthcare', 'education', 'financial',
+]);
+
+/**
+ * Validate and clean extracted filters by removing invalid service types
+ */
+function validateExtractedFilters(response: LLMFilterExtractionResponse): LLMFilterExtractionResponse {
+  if (response.filters?.service_types) {
+    const validTypes = response.filters.service_types.filter(type => VALID_SERVICE_TYPES.has(type));
+    const invalidTypes = response.filters.service_types.filter(type => !VALID_SERVICE_TYPES.has(type));
+
+    if (invalidTypes.length > 0) {
+      console.warn('[LLM Extract] Removed invalid service types:', invalidTypes);
+    }
+
+    response.filters.service_types = validTypes;
+  }
+
+  return response;
+}
+
+/**
  * POST /api/llm/extract-filters
  *
  * Extract structured filters from natural language query using backend LLM service.
@@ -40,8 +83,9 @@ export async function POST(request: NextRequest) {
 
       console.log('[LLM Extract] Backend success');
 
-      // Backend returns compatible format, just pass through
-      return NextResponse.json(backendResponse);
+      // Validate and clean extracted filters
+      const validatedResponse = validateExtractedFilters(backendResponse);
+      return NextResponse.json(validatedResponse);
 
     } catch (backendError) {
       console.warn('[LLM Extract] Backend failed, trying fallback:', backendError);
@@ -52,7 +96,9 @@ export async function POST(request: NextRequest) {
 
         console.log('[LLM Extract] Fallback success with', fallbackResponse.metadata.provider);
 
-        return NextResponse.json(fallbackResponse);
+        // Validate and clean extracted filters
+        const validatedResponse = validateExtractedFilters(fallbackResponse);
+        return NextResponse.json(validatedResponse);
 
       } catch (fallbackError) {
         console.error('[LLM Extract] All LLM providers failed:', fallbackError);
@@ -62,7 +108,9 @@ export async function POST(request: NextRequest) {
 
         console.log('[LLM Extract] Using basic fallback');
 
-        return NextResponse.json(basicFilters);
+        // Validate and clean extracted filters
+        const validatedResponse = validateExtractedFilters(basicFilters);
+        return NextResponse.json(validatedResponse);
       }
     }
 
