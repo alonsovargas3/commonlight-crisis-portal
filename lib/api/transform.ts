@@ -88,27 +88,30 @@ export function transformFiltersToBackendParams(
     params.age_groups = mappedAgeGroups.join(',');
   }
 
-  // Boolean filters
+  // Boolean filters (only those supported by backend v2)
   if (filters.has_crisis_services !== undefined) {
     params.has_crisis_services = filters.has_crisis_services.toString();
   }
   if (filters.walk_ins_accepted !== undefined) {
     params.walk_ins_accepted = filters.walk_ins_accepted.toString();
   }
-  if (filters.referral_required !== undefined) {
-    params.referral_required = filters.referral_required.toString();
-  }
   if (filters.gender_specific) {
     params.gender_specific = filters.gender_specific;
   }
+
+  // NOTE: These filters are NOT supported by backend v2 yet - skip them
+  // Log warning if user requested unsupported filters
   if (filters.lgbtq_affirming !== undefined) {
-    params.lgbtq_affirming = filters.lgbtq_affirming.toString();
+    console.warn('[Transform] Skipping lgbtq_affirming filter - not supported by backend v2 yet');
+  }
+  if (filters.referral_required !== undefined) {
+    console.warn('[Transform] Skipping referral_required filter - not supported by backend v2 yet');
   }
   if (filters.wheelchair_accessible !== undefined) {
-    params.wheelchair_accessible = filters.wheelchair_accessible.toString();
+    console.warn('[Transform] Skipping wheelchair_accessible filter - not supported by backend v2 yet');
   }
   if (filters.telehealth_available !== undefined) {
-    params.telehealth_available = filters.telehealth_available.toString();
+    console.warn('[Transform] Skipping telehealth_available filter - not supported by backend v2 yet');
   }
 
   // Availability: camelCase → snake_case
