@@ -227,7 +227,7 @@ function createBasicFilters(query: string): LLMFilterExtractionResponse {
       walk_ins_accepted: walk_ins_accepted || undefined,
       referral_required: referral_required || undefined,
       urgentAccessOnly: queryLower.includes('urgent') || queryLower.includes('crisis') || queryLower.includes('emergency') || queryLower.includes('now') || queryLower.includes('immediate'),
-      max_distance_km: 25, // Default 25km radius
+      max_distance_miles: 15, // Default 15 mile radius [bead v3n2]
     },
     explanation: explanationParts.join(' '),
     confidence: 0.3,

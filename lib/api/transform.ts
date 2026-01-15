@@ -9,6 +9,13 @@
 import type { CanonicalSearchFilters, SearchResponse, ResourceSearchResult, LocationCoordinate } from '@/types/search';
 
 /**
+ * Distance conversion constants [bead v3n2]
+ * Frontend uses miles, backend uses kilometers
+ */
+const MILES_TO_KM = 1.60934;
+const KM_TO_MILES = 0.621371;
+
+/**
  * Age group aliases for common LLM mistakes
  */
 const AGE_GROUP_ALIASES: Record<string, string> = {
@@ -50,9 +57,11 @@ export function transformFiltersToBackendParams(
     }
   }
 
-  // Distance: max_distance_km → radius_km
-  if (filters.max_distance_km) {
-    params.radius_km = filters.max_distance_km.toString();
+  // Distance: max_distance_miles → radius_km [bead v3n2]
+  // Convert miles to kilometers for backend
+  if (filters.max_distance_miles) {
+    const radiusKm = filters.max_distance_miles * MILES_TO_KM;
+    params.radius_km = radiusKm.toFixed(2);
   }
 
   // Service types (comma-separated) - handle both string and array
@@ -203,7 +212,11 @@ function transformBackendResult(result: any): ResourceSearchResult {
       service_type: svc.canonical_type || svc.service_type,
       rcs: svc.rcs || result.verification?.confidence_score || 0.5,
     })) || [],
-    distance_km: result.details?.distance_km || result.distance_km,
+    distance_miles: result.details?.distance_km
+      ? result.details.distance_km * KM_TO_MILES
+      : result.distance_km
+      ? result.distance_km * KM_TO_MILES
+      : undefined,
     accessibility_score: result.verification?.data_completeness
       ? Math.round(result.verification.data_completeness * 100)
       : result.accessibility_score,
@@ -221,7 +234,7 @@ function transformBackendFilters(backendFilters: any): CanonicalSearchFilters {
       address: backendFilters.location,
       coordinates: parseLocation(backendFilters.location),
     } : undefined,
-    max_distance_km: backendFilters.radius_km ? Number(backendFilters.radius_km) : undefined,
+    max_distance_miles: backendFilters.radius_km ? Number(backendFilters.radius_km) * KM_TO_MILES : undefined,
     service_types: backendFilters.service_types?.map((st: any) =>
       typeof st === 'string' ? st : st.code
     ),

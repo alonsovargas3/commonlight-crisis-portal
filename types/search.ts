@@ -67,8 +67,8 @@ export interface CanonicalSearchFilters {
   /** Primary location for distance calculations */
   location?: SearchLocation;
 
-  /** Maximum distance in kilometers */
-  max_distance_km?: number;
+  /** Maximum distance in miles [bead v3n2] */
+  max_distance_miles?: number;
 
   /** Maximum transit time in minutes (requires location) */
   max_transit_time_min?: number;
@@ -343,8 +343,8 @@ export interface ResourceSearchResult {
     rcs?: number;
   }>;
 
-  /** Distance from search location (if provided) */
-  distance_km?: number;
+  /** Distance from search location in miles (if provided) [bead v3n2] */
+  distance_miles?: number;
 
   /** Transit time from search location (if provided) */
   transit_time_min?: number;

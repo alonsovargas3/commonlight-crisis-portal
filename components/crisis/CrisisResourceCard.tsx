@@ -26,7 +26,7 @@ interface Resource {
   state?: string;
   phone_numbers?: string[];
   website?: string;
-  distance_km?: number;
+  distance_miles?: number;
   services?: Array<{
     name: string;
     service_type?: string;
@@ -95,11 +95,11 @@ export function CrisisResourceCard({ resource, userLocation, index }: CrisisReso
 
   const tierBadge = getTierBadge(resource.tier);
 
-  // Format distance
-  const distanceText = resource.distance_km !== undefined
-    ? resource.distance_km < 1
-      ? `${Math.round(resource.distance_km * 1000)}m`
-      : `${resource.distance_km.toFixed(1)}km`
+  // Format distance [bead v3n2]
+  const distanceText = resource.distance_miles !== undefined
+    ? resource.distance_miles < 0.1
+      ? `${Math.round(resource.distance_miles * 5280)} ft`
+      : `${resource.distance_miles.toFixed(1)} mi`
     : null;
 
   // Action handlers

@@ -212,7 +212,8 @@ The frontend and backend use different schemas. The transform layer (`lib/api/tr
 
 **Field Mappings:**
 - `keywords` → `query`
-- `max_distance_km` → `radius_km`
+- `max_distance_miles` → `radius_km` (converted: miles × 1.60934) [bead v3n2]
+- `distance_miles` ← `distance_km` (converted: km × 0.621371) [bead v3n2]
 - `insurance` → `insurance_types`
 - `urgentAccessOnly` → `urgent_access_only`
 - `location` (object) → `"lat,lon"` (string)
@@ -238,7 +239,7 @@ Common LLM mistakes are automatically mapped to correct canonical codes:
 - `languages` - ISO 639-1 language codes (en, es, etc.)
 - `age_groups` - Canonical age group codes
 - `location` - "lat,lon" string
-- `radius_km` - Search radius (default: 10km)
+- `radius_km` - Search radius in kilometers (frontend sends in miles, auto-converted)
 - `care_phase` - immediate_crisis, acute_support, recovery_support, maintenance
 - `urgent_access_only` - Boolean for same-day/immediate access
 - `accepting_new_patients` - Boolean
@@ -396,3 +397,5 @@ Inspired by FindHelp.org and Psychology Today directory UX.
 11. **Backend Retry Logic**: Backend client retries failed requests 3 times with exponential backoff. This can add 7 seconds to failed requests. Monitor logs for retry patterns.
 
 12. **FilterUtils Serialization**: Use `FilterUtils.toURLParams()` to convert filters to URL params, not manual string building. Handles JSON serialization of complex objects.
+
+13. **Distance Units [bead v3n2]**: Frontend uses MILES, backend uses KILOMETERS. Conversion happens automatically in `lib/api/transform.ts` (1 mi = 1.60934 km, 1 km = 0.621371 mi). Distance slider ranges from 5-100 miles (default: 30 mi). Distances < 0.1 mi display in feet.

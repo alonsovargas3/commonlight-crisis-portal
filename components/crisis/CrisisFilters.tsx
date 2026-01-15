@@ -144,7 +144,7 @@ export function CrisisFilters({ filters, onChange }: CrisisFiltersProps) {
 
       <div className="h-px bg-gray-200 dark:bg-gray-700" />
 
-      {/* Filter 2: Distance */}
+      {/* Filter 2: Distance [bead v3n2] */}
       <div className="space-y-3">
         <Label htmlFor="distance" className="text-sm font-semibold text-gray-900 dark:text-white block">
           Max Distance
@@ -155,16 +155,16 @@ export function CrisisFilters({ filters, onChange }: CrisisFiltersProps) {
             min={5}
             max={100}
             step={5}
-            value={[filters.max_distance_km || 50]}
-            onValueChange={([value]) => updateFilter('max_distance_km', value)}
+            value={[filters.max_distance_miles || 30]}
+            onValueChange={([value]) => updateFilter('max_distance_miles', value)}
             className="flex-1"
-            aria-label={`Maximum distance: ${filters.max_distance_km || 50} kilometers`}
+            aria-label={`Maximum distance: ${filters.max_distance_miles || 30} miles`}
           />
           <div className="min-w-[60px] text-right">
             <span className="text-lg font-bold text-blue-700 dark:text-blue-400">
-              {filters.max_distance_km || 50}
+              {filters.max_distance_miles || 30}
             </span>
-            <span className="text-sm text-gray-500 dark:text-gray-400 ml-1">km</span>
+            <span className="text-sm text-gray-500 dark:text-gray-400 ml-1">mi</span>
           </div>
         </div>
         <p className="text-xs text-gray-600 dark:text-gray-400">
@@ -337,7 +337,7 @@ export function CrisisFilters({ filters, onChange }: CrisisFiltersProps) {
                     care_phase: undefined,
                     has_crisis_services: undefined,
                     urgentAccessOnly: true,
-                    max_distance_km: 50,
+                    max_distance_miles: 30,
                     insurance: undefined,
                     gender_specific: undefined,
                     walk_ins_accepted: undefined,

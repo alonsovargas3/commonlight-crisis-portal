@@ -44,7 +44,7 @@ interface Resource {
   phone_numbers?: string[];
   website?: string;
   email?: string;
-  distance_km?: number;
+  distance_miles?: number;
   services?: Array<{
     name: string;
     service_type?: string;
@@ -263,11 +263,11 @@ export default function CrisisResourceDetailPage() {
                     <MapPin className="h-5 w-5 shrink-0 mt-0.5 text-blue-700" />
                     <div>
                       <p className="font-medium">{location}</p>
-                      {resource.distance_km !== undefined && (
+                      {resource.distance_miles !== undefined && (
                         <p className="text-sm text-gray-500 dark:text-gray-400">
-                          {resource.distance_km < 1
-                            ? `${Math.round(resource.distance_km * 1000)}m away`
-                            : `${resource.distance_km.toFixed(1)}km away`}
+                          {resource.distance_miles < 0.1
+                            ? `${Math.round(resource.distance_miles * 5280)} ft away`
+                            : `${resource.distance_miles.toFixed(1)} mi away`}
                         </p>
                       )}
                     </div>
