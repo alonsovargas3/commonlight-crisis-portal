@@ -113,7 +113,36 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Strategy 1: Try backend API first
+    // PERFORMANCE: Backend LLM is currently failing (HTTP 500)
+    // Skip it entirely to avoid 7+ seconds of wasted retries
+    // TODO: Re-enable when backend LLM is fixed
+
+    // Strategy 1: Direct LLM API calls (OpenAI/Anthropic)
+    try {
+      const fallbackResponse = await extractFiltersWithFallback(query, context);
+
+      console.log('[LLM Extract] Success with', fallbackResponse.metadata.provider);
+
+      // Validate and clean extracted filters
+      const validatedResponse = validateExtractedFilters(fallbackResponse, query);
+      return NextResponse.json(validatedResponse);
+
+    } catch (llmError) {
+      console.error('[LLM Extract] LLM providers failed:', llmError);
+
+      // Strategy 2: Return basic keyword-based filters (last resort)
+      const basicFilters: LLMFilterExtractionResponse = createBasicFilters(query);
+
+      console.log('[LLM Extract] Using basic keyword fallback');
+
+      // Validate and clean extracted filters
+      const validatedResponse = validateExtractedFilters(basicFilters, query);
+      return NextResponse.json(validatedResponse);
+    }
+
+    // NOTE: Backend LLM extraction disabled due to consistent HTTP 500 errors
+    // Uncomment when backend /llm/extract-filters is fixed:
+    /*
     try {
       const backendResponse = await BackendClient.extractFilters(
         query,
@@ -124,37 +153,14 @@ export async function POST(request: NextRequest) {
       );
 
       console.log('[LLM Extract] Backend success');
-
-      // Validate and clean extracted filters
       const validatedResponse = validateExtractedFilters(backendResponse, query);
       return NextResponse.json(validatedResponse);
 
     } catch (backendError) {
       console.warn('[LLM Extract] Backend failed, trying fallback:', backendError);
-
-      // Strategy 2: Fallback to direct LLM API calls
-      try {
-        const fallbackResponse = await extractFiltersWithFallback(query, context);
-
-        console.log('[LLM Extract] Fallback success with', fallbackResponse.metadata.provider);
-
-        // Validate and clean extracted filters
-        const validatedResponse = validateExtractedFilters(fallbackResponse, query);
-        return NextResponse.json(validatedResponse);
-
-      } catch (fallbackError) {
-        console.error('[LLM Extract] All LLM providers failed:', fallbackError);
-
-        // Strategy 3: Return basic keyword-based filters (last resort)
-        const basicFilters: LLMFilterExtractionResponse = createBasicFilters(query);
-
-        console.log('[LLM Extract] Using basic fallback');
-
-        // Validate and clean extracted filters
-        const validatedResponse = validateExtractedFilters(basicFilters, query);
-        return NextResponse.json(validatedResponse);
-      }
+      // ... fallback logic
     }
+    */
 
   } catch (error) {
     console.error('[LLM Extract] Fatal error:', error);
